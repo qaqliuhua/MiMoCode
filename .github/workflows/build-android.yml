@@ -43,10 +43,13 @@ jobs:
           sudo unzip -q /tmp/ndk.zip -d /opt/
           echo "NDK installed at /opt/android-ndk-r28b"
 
-      - name: Install Bun
+      - name: Install Bun (host, pinned v1.3.2)
         run: |
-          curl -fsSL https://bun.sh/install | bash
+          # CRITICAL: Host Bun must be 1.3.2 for module graph compatibility
+          # Bun >= 1.3.11 uses 52-byte stride (INCOMPATIBLE with target Bun 1.2.13)
+          curl -fsSL https://bun.sh/install | bash -s "bun-v1.3.2"
           echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.bun/bin:$PATH"
           bun --version
 
       - name: Clone Bun source
