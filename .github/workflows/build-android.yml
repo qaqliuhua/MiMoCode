@@ -86,13 +86,27 @@ jobs:
 
       - name: Install MiMoCode dependencies
         run: |
-          echo "workspace: $GITHUB_WORKSPACE"
+          echo "=== DEBUG: 完整环境诊断 ==="
           echo "pwd: $(pwd)"
-          echo "bun: $(which bun 2>&1 || echo 'not found')"
-          echo "bun version: $(bun --version 2>&1 || echo 'failed')"
-          echo "node version: $(node --version 2>&1 || echo 'not found')"
-          ls -la package.json 2>&1 || echo "NO package.json"
-          ls -la node_modules/ 2>&1 | head -3 || echo "NO node_modules"
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo ""
+          echo "--- 目录内容 ---"
+          ls -la
+          echo ""
+          echo "--- package.json 搜索 ---"
+          find . -maxdepth 2 -name package.json
+          echo ""
+          echo "--- bun 信息 ---"
+          which bun 2>&1 || echo 'bun not found'
+          bun --version 2>&1 || echo 'bun version failed'
+          echo ""
+          echo "--- git 状态 ---"
+          git status 2>&1 || echo 'not a git repo'
+          echo ""
+          echo "--- 环境变量 ---"
+          env | grep -E 'BUN|PWD|GITHUB|HOME|PATH' | head -20
+          echo ""
+          echo "=== 开始 bun install ==="
           bun install
 
       - name: Build MiMoCode Android binary
