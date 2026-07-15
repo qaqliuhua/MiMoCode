@@ -1,0 +1,90 @@
+name: Build MiMoCode Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'MiMoCode version to build'
+        required: false
+        default: 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+
+    steps:
+      - name: Checkout MiMoCode
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version || 'main' }}
+
+      - name: Checkout opencode-termux (patches)
+        uses: actions/checkout@v4
+        with:
+          repository: guysoft/opencode-termux
+          path: opencode-termux
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build rustc cargo golang-go ruby perl python3
+
+      - name: Install Zig 0.14.0
+        run: |
+          curl -fsSL -o /tmp/zig.tar.xz "https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz"
+          sudo tar -xf /tmp/zig.tar.xz -C /usr/local/
+          sudo ln -sf /usr/local/zig-linux-x86_64-0.14.0/zig /usr/local/bin/zig
+          zig version
+
+      - name: Setup Android NDK r28b
+        run: |
+          curl -fsSL -o /tmp/ndk.zip "https://dl.google.com/android/repository/android-ndk-r28b-linux.zip"
+          sudo unzip -q /tmp/ndk.zip -d /opt/
+          echo "NDK installed at /opt/android-ndk-r28b"
+
+      - name: Clone Bun source
+        working-directory: opencode-termux
+        run: bash scripts/apply-patches.sh
+
+      - name: Build ICU
+        working-directory: opencode-termux
+        run: bash scripts/build-icu.sh
+
+      - name: Build WebKit/JSC
+        working-directory: opencode-termux
+        run: bash scripts/build-webkit.sh
+
+      - name: Build TinyCC
+        working-directory: opencode-termux
+        run: bash scripts/build-tinycc.sh
+
+      - name: Build patched Bun
+        working-directory: opencode-termux
+        run: bash scripts/build-bun.sh
+
+      - name: Build libopentui
+        working-directory: opencode-termux
+        run: bash scripts/build-opentui.sh
+
+      - name: Install MiMoCode dependencies
+        run: bun install
+
+      - name: Build MiMoCode Android binary
+        working-directory: opencode-termux
+        run: bash scripts/build-opencode.sh
+        env:
+          OPENCODE_VERSION: "0.1.5"
+
+      - name: Package release
+        working-directory: opencode-termux
+        run: bash scripts/make-packages.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimocode-android-aarch64
+          path: |
+            opencode-termux/build/dist/*.zip
+            opencode-termux/build/dist/*.deb
+            opencode-termux/build/dist/*.pkg.tar.xz
