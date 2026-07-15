@@ -85,7 +85,15 @@ jobs:
           touch build/opentui-src/packages/core/src/lib/aarch64-linux-android/libopentui.so
 
       - name: Install MiMoCode dependencies
-        run: bun install
+        run: |
+          echo "workspace: $GITHUB_WORKSPACE"
+          echo "pwd: $(pwd)"
+          echo "bun: $(which bun 2>&1 || echo 'not found')"
+          echo "bun version: $(bun --version 2>&1 || echo 'failed')"
+          echo "node version: $(node --version 2>&1 || echo 'not found')"
+          ls -la package.json 2>&1 || echo "NO package.json"
+          ls -la node_modules/ 2>&1 | head -3 || echo "NO node_modules"
+          bun install
 
       - name: Build MiMoCode Android binary
         working-directory: opencode-termux
