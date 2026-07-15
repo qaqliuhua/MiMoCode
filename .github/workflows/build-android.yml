@@ -43,6 +43,10 @@ jobs:
           sudo unzip -q /tmp/ndk.zip -d /opt/
           echo "NDK installed at /opt/android-ndk-r28b"
 
+      - name: Install Rust Android target
+        run: |
+          rustup target add aarch64-linux-android
+
       - name: Install Bun (host, pinned v1.3.2)
         run: |
           # CRITICAL: Host Bun must be 1.3.2 for module graph compatibility
