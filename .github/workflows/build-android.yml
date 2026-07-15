@@ -43,6 +43,12 @@ jobs:
           sudo unzip -q /tmp/ndk.zip -d /opt/
           echo "NDK installed at /opt/android-ndk-r28b"
 
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          bun --version
+
       - name: Clone Bun source
         working-directory: opencode-termux
         run: bash scripts/apply-patches.sh
