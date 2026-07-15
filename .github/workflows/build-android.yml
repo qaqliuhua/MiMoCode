@@ -76,9 +76,13 @@ jobs:
         working-directory: opencode-termux
         run: bash scripts/build-bun.sh
 
-      - name: Build libopentui
+      - name: Build libopentui (skip — Zig 0.14.0 incompatible with uucode dep)
         working-directory: opencode-termux
-        run: bash scripts/build-opentui.sh
+        run: |
+          echo ">>> Skipping libopentui build (Zig 0.14.0 / uucode incompatibility)"
+          echo ">>> TUI native renderer will be missing; mimo serve/run work without it"
+          mkdir -p build/opentui-src/packages/core/src/lib/aarch64-linux-android/
+          touch build/opentui-src/packages/core/src/lib/aarch64-linux-android/libopentui.so
 
       - name: Install MiMoCode dependencies
         run: bun install
